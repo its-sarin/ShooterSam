@@ -8,6 +8,7 @@
 #include "Blueprint/UserWidget.h"
 #include "ShooterSam.h"
 #include "Widgets/Input/SVirtualJoystick.h"
+#include "HUDWidget.h"
 
 void AShooterSamPlayerController::BeginPlay()
 {
@@ -29,7 +30,20 @@ void AShooterSamPlayerController::BeginPlay()
 			UE_LOG(LogShooterSam, Error, TEXT("Could not spawn mobile controls widget."));
 
 		}
+	}
 
+	// create the HUD widget
+	if (HUDWidgetClass)
+	{
+		HUDWidget = CreateWidget<UHUDWidget>(this, HUDWidgetClass);
+		if (HUDWidget)
+		{
+			HUDWidget->AddToPlayerScreen(0);
+		}
+		else
+		{
+			UE_LOG(LogShooterSam, Error, TEXT("Could not spawn HUD widget."));
+		}
 	}
 }
 
