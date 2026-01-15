@@ -137,5 +137,5 @@ void AShooterSamCharacter::DoJumpEnd()
 
 void AShooterSamCharacter::Shoot()
 {
-	UE_LOG(LogShooterSam, Log, TEXT("Bang!"));
+	UE_LOG(LogShooterSam, Log, TEXT("Pulling Trigger..."));
 }
