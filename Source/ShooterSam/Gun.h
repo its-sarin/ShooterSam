@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 #include "Gun.generated.h"
 
 UCLASS()
@@ -25,12 +27,29 @@ public:
 
 	void PullTrigger();
 
+	AController* OwnerController;
+
+	UPROPERTY(EditAnywhere)
+	float MaxRange = 10000.f;
+
+	UPROPERTY(EditAnywhere)
+	float BulletDamage = 10.f;
+
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* HitWorldParticleSystem;
+
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* HitActorParticleSystem;
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	class USceneComponent* SceneRoot;
 
 	UPROPERTY(VisibleAnywhere)
-	class USkeletalMeshComponent* GunMeshComp;
+	class USkeletalMeshComponent* GunMesh;
+
+	UPROPERTY(VisibleAnywhere)
+	UNiagaraComponent* MuzzleFlashParticleSystem;
 
 
 };

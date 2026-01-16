@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "ShooterSam.h"
+#include "Gun.h"
 
 AShooterSamCharacter::AShooterSamCharacter()
 {
@@ -48,6 +49,32 @@ AShooterSamCharacter::AShooterSamCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+void AShooterSamCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	CurrentHealth = MaxHealth;
+
+	OnTakeAnyDamage.AddDynamic(this, &AShooterSamCharacter::HandleTakeDamage);
+
+	// Hide the gun mesh component on the character
+	GetMesh()->HideBoneByName(TEXT("weapon_r"), EPhysBodyOp::PBO_None);
+
+	// Spawn the gun
+	if (GunClass)
+	{
+		Gun = GetWorld()->SpawnActor<AGun>(GunClass);
+		if (Gun)
+		{
+			Gun->SetOwner(this);
+			Gun->OwnerController = GetController();
+
+			// Attach the gun to the character's mesh
+			Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
+		}
+	}
 }
 
 void AShooterSamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -137,5 +164,24 @@ void AShooterSamCharacter::DoJumpEnd()
 
 void AShooterSamCharacter::Shoot()
 {
-	UE_LOG(LogShooterSam, Log, TEXT("Pulling Trigger..."));
+	if (Gun)
+	{
+		Gun->PullTrigger();
+	}
+}
+
+void AShooterSamCharacter::HandleTakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{	
+	if (bIsAlive)
+	{
+		CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0f, MaxHealth);
+		UE_LOG(LogShooterSam, Warning, TEXT("'%s' took damage: %f"), *GetNameSafe(this), Damage);
+
+		if (CurrentHealth == 0.0f)
+		{
+			bIsAlive = false;
+			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			UE_LOG(LogShooterSam, Warning, TEXT("'%s' is dead."), *GetNameSafe(this));
+		}
+	}
 }

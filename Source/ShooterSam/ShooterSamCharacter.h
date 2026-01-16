@@ -11,6 +11,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
+class AGun;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -32,6 +33,8 @@ class AShooterSamCharacter : public ACharacter
 	UCameraComponent* FollowCamera;
 	
 protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
@@ -100,5 +103,25 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+public:
+	UPROPERTY(EditAnywhere, Category="Health")
+	float MaxHealth = 100.0f;
+
+	UPROPERTY(VisibleAnywhere, Category="Health")
+	float CurrentHealth;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	bool bIsAlive = true;
+
+	/** Gun Actor to spawn */
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TSubclassOf<AGun> GunClass;
+	
+	UFUNCTION()
+	void HandleTakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+
+private:
+	AGun* Gun;
 };
 
