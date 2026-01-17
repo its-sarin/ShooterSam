@@ -181,6 +181,7 @@ void AShooterSamCharacter::HandleTakeDamage(AActor* DamagedActor, float Damage, 
 		{
 			bIsAlive = false;
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			DetachFromControllerPendingDestroy();
 			UE_LOG(LogShooterSam, Warning, TEXT("'%s' is dead."), *GetNameSafe(this));
 		}
 	}

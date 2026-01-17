@@ -3,6 +3,7 @@
 
 #include "ShooterAI.h"
 #include "ShooterSamCharacter.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 void AShooterAI::BeginPlay()
 {
@@ -20,20 +21,6 @@ void AShooterAI::BeginPlay()
 void AShooterAI::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	//if (PlayerPawn)
-	//{
-	//	if (LineOfSightTo(PlayerPawn))
-	//	{
-	//		SetFocus(PlayerPawn);
-	//		MoveToActor(PlayerPawn, 200.0f);
-	//	}
-	//	else
-	//	{
-	//		ClearFocus(EAIFocusPriority::Gameplay);
-	//		StopMovement();
-	//	}
-	//}
 		
 }
 
@@ -49,5 +36,11 @@ void AShooterAI::StartBehaviorTree(AShooterSamCharacter* Player)
 		}				
 
 		RunBehaviorTree(EnemyAIBehaviorTree);
+
+		UBlackboardComponent* BlackboardComp = GetBlackboardComponent();
+		if (BlackboardComp && MyCharacter && PlayerCharacter)
+		{
+			BlackboardComp->SetValueAsVector("StartLocation", MyCharacter->GetActorLocation());
+		}
 	}
 }
