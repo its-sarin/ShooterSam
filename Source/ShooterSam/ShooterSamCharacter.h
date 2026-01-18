@@ -12,6 +12,7 @@ class UCameraComponent;
 class UInputAction;
 struct FInputActionValue;
 class AGun;
+class AShooterSamPlayerController;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -120,6 +121,8 @@ public:
 	
 	UFUNCTION()
 	void HandleTakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+
+	void UpdateHUD();
 
 private:
 	AGun* Gun;

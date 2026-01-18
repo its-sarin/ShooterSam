@@ -37,9 +37,6 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UUserWidget> MobileControlsWidget;
 
-	//** Pointer to the HUD widget */
-	TObjectPtr<UHUDWidget> HUDWidget;
-
 	/** If true, the player will use UMG touch controls even if not playing on mobile platforms */
 	UPROPERTY(EditAnywhere, Config, Category = "Input|Touch Controls")
 	bool bForceTouchControls = false;
@@ -58,4 +55,6 @@ public:
 	UPROPERTY(EditAnywhere, Category="HUD")
 	TSubclassOf<UHUDWidget> HUDWidgetClass;
 
+	/** Pointer to the HUD widget */
+	UHUDWidget* HUDWidget;
 };

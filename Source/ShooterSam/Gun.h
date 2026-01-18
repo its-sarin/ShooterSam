@@ -41,6 +41,15 @@ public:
 	UPROPERTY(EditAnywhere)
 	UNiagaraSystem* HitActorParticleSystem;
 
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float AIShotDeviationAngle = 3.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase* ShootSound;
+
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase* ImpactSound;
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	class USceneComponent* SceneRoot;

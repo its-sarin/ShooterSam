@@ -3,6 +3,7 @@
 
 #include "Gun.h"
 #include "Kismet/GameplayStatics.h"
+#include "ShooterAI.h"
 
 // Sets default values
 AGun::AGun()
@@ -40,13 +41,31 @@ void AGun::PullTrigger()
 	if (OwnerController)
 	{
 		MuzzleFlashParticleSystem->Activate(true);
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			ShootSound,
+			GetActorLocation()
+		);
 
 		FVector ViewPointLocation;
 		FRotator ViewPointRotation;
-		OwnerController->GetPlayerViewPoint(ViewPointLocation, ViewPointRotation);
+		OwnerController->GetPlayerViewPoint(ViewPointLocation, ViewPointRotation);	
 
 		FHitResult HitResult;
 		FVector EndLocation = ViewPointLocation + ViewPointRotation.Vector() * MaxRange;
+
+		// Add deviation for inaccuracy if OwnerController is ShooterAI
+		if (Cast<AShooterAI>(OwnerController)) 
+		{
+			FRotator DeviationRotator = FRotator(
+				FMath::FRandRange(-AIShotDeviationAngle, AIShotDeviationAngle),
+				FMath::FRandRange(-AIShotDeviationAngle, AIShotDeviationAngle),
+				0.0f
+			);
+			FVector DeviatedDirection = DeviationRotator.RotateVector(ViewPointRotation.Vector());
+			EndLocation = ViewPointLocation + DeviatedDirection * MaxRange;
+		}
+
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(this);
 		Params.AddIgnoredActor(GetOwner());
@@ -61,7 +80,11 @@ void AGun::PullTrigger()
 
 		if (IsHit)
 		{
-			
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				ImpactSound,
+				HitResult.ImpactPoint
+			);
 
 			if (AActor* HitActor = HitResult.GetActor())
 			{
