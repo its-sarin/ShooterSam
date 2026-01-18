@@ -13,6 +13,7 @@
 #include "ShooterSam.h"
 #include "Gun.h"
 #include "ShooterSamPlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "HUDWidget.h" 
 
 AShooterSamCharacter::AShooterSamCharacter()
@@ -104,7 +105,7 @@ void AShooterSamCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	if (bIsSprinting && MovementVector.Y < 0.75f)
+	if (bIsSprinting && MovementVector.Y < 0.6f)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
 		bIsSprinting = false;
@@ -236,9 +237,14 @@ void AShooterSamCharacter::DoZoomEnd()
 
 void AShooterSamCharacter::DoSprintStart()
 {
+	if (MovementVector.Y < 0.6f)
+	{
+		return;
+	}
+
 	bIsSprinting = true;
 	bShouldZoomIn = true;
-	GetCharacterMovement()->MaxWalkSpeed = MovementVector.Y >= 0.75f ?  SprintMaxWalkSpeed : MaxWalkSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = SprintMaxWalkSpeed;
 }
 
 void AShooterSamCharacter::DoSprintEnd()
@@ -272,5 +278,30 @@ void AShooterSamCharacter::UpdateHUD()
 	if (PlayerController && PlayerController->HUDWidget)
 	{
 		PlayerController->HUDWidget->SetHealthBarPercent(CurrentHealth / MaxHealth);
+	}
+}
+
+void AShooterSamCharacter::Heal(float HealAmount)
+{
+	CurrentHealth = FMath::Clamp(CurrentHealth + HealAmount, 0.0f, MaxHealth);
+	UpdateHUD();
+
+	if (HealingEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			HealingEffect,
+			GetActorLocation(),
+			FRotator::ZeroRotator
+		);
+	}
+	
+	if (HealingSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			HealingSound,
+			GetActorLocation()
+		);
 	}
 }

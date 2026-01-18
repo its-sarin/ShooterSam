@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "NiagaraComponent.h"
 #include "ShooterSamCharacter.generated.h"
 
 class USpringArmComponent;
@@ -167,6 +168,14 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float SprintMaxWalkSpeed = 550.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	UNiagaraSystem* HealingEffect;
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	USoundBase* HealingSound;
+
+	void Heal(float HealAmount);
+
 private:
 	AGun* Gun;
 
@@ -174,9 +183,10 @@ private:
 	bool bShouldZoomOut = false;
 
 	bool bIsSprinting = false;
+	bool bIsSprintOnCooldown = false;
 
 	float MaxWalkSpeed;
 
 	FVector2D MovementVector;
-};
 
+};

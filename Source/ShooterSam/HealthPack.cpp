@@ -40,16 +40,11 @@ void AHealthPack::NotifyActorBeginOverlap(AActor* OtherActor)
 	// If other acotr is ShooterSamCharacter and not an AI, increase health
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	UE_LOG(LogTemp, Warning, TEXT("Health Pack overlapped with: %s"), *OtherActor->GetName());
-
 	if (AShooterSamCharacter* ShooterSam = Cast<AShooterSamCharacter>(OtherActor))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Health Pack overlapped with ShooterSamCharacter"));
 		if (!ShooterSam->bIsAICharacter && ShooterSam->bIsAlive)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Health Pack restoring health to ShooterSamCharacter"));
-			ShooterSam->CurrentHealth = FMath::Clamp(ShooterSam->CurrentHealth + HealthAmount, 0.0f, ShooterSam->MaxHealth);
-			ShooterSam->UpdateHUD();
+			ShooterSam->Heal(HealthAmount);
 			// Destroy health pack
 			Destroy();
 		}
