@@ -6,6 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "HealthPack.generated.h"
 
+class UStaticMeshComponent;
+class USphereComponent;
+
 UCLASS()
 class SHOOTERSAM_API AHealthPack : public AActor
 {
@@ -23,4 +26,17 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(EditAnywhere, Category = "Components")
+	USphereComponent* SphereComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Components")
+	UStaticMeshComponent* MeshComponent;
+
+	// Amount of health to restore
+	UPROPERTY(EditAnywhere, Category = "Health")
+	float HealthAmount = 25.0f;
+
+	// Function to handle overlap events
+	UFUNCTION()
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };

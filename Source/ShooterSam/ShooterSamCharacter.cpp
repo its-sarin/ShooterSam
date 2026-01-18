@@ -33,7 +33,7 @@ AShooterSamCharacter::AShooterSamCharacter()
 	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 500.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -60,6 +60,8 @@ void AShooterSamCharacter::BeginPlay()
 	CurrentHealth = MaxHealth;
 	UpdateHUD();
 
+	MaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+
 	OnTakeAnyDamage.AddDynamic(this, &AShooterSamCharacter::HandleTakeDamage);
 
 	// Hide the gun mesh component on the character
@@ -77,6 +79,35 @@ void AShooterSamCharacter::BeginPlay()
 			// Attach the gun to the character's mesh
 			Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
 		}
+	}
+}
+
+void AShooterSamCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bShouldZoomIn)
+	{
+		// Smoothly interpolate camera FOV to zoomed FOV
+		float NewFOV = FMath::Lerp(FollowCamera->FieldOfView, ZoomedFOV, 0.1f);
+		FollowCamera->SetFieldOfView(NewFOV);
+	}
+	else if (bShouldZoomOut)
+	{
+		// Smoothly interpolate camera FOV back to default FOV
+		float NewFOV = FMath::Lerp(FollowCamera->FieldOfView, DefaultFOV, 0.1f);
+		FollowCamera->SetFieldOfView(NewFOV);
+
+		if (FollowCamera->FieldOfView == DefaultFOV)
+		{
+			bShouldZoomOut = false;
+		}
+	}
+
+	if (bIsSprinting && MovementVector.Y < 0.75f)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
+		bIsSprinting = false;
 	}
 }
 
@@ -98,6 +129,14 @@ void AShooterSamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		
 		// Shooting
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AShooterSamCharacter::Shoot);
+
+		// Zooming
+		EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &AShooterSamCharacter::DoZoomStart);
+		EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Completed, this, &AShooterSamCharacter::DoZoomEnd);
+
+		// Sprinting
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AShooterSamCharacter::DoSprintStart);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AShooterSamCharacter::DoSprintEnd);
 	}
 	else
 	{
@@ -108,7 +147,7 @@ void AShooterSamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 void AShooterSamCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	MovementVector = Value.Get<FVector2D>();
 
 	// route the input
 	DoMove(MovementVector.X, MovementVector.Y);
@@ -118,6 +157,9 @@ void AShooterSamCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
+
+	float LookSensitivity = bShouldZoomIn ? ZoomInSensitivity : DefaultSensitivity;
+	LookAxisVector *= LookSensitivity;
 
 	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
@@ -171,6 +213,40 @@ void AShooterSamCharacter::Shoot()
 	{
 		Gun->PullTrigger();
 	}
+}
+
+void AShooterSamCharacter::DoZoomStart()
+{
+	if (bIsSprinting)
+	{
+		return;
+	}
+	bShouldZoomIn = true;
+}
+
+void AShooterSamCharacter::DoZoomEnd()
+{
+	if (bIsSprinting)
+	{
+		return;
+	}
+	bShouldZoomIn = false;
+	bShouldZoomOut = true;
+}
+
+void AShooterSamCharacter::DoSprintStart()
+{
+	bIsSprinting = true;
+	bShouldZoomIn = true;
+	GetCharacterMovement()->MaxWalkSpeed = MovementVector.Y >= 0.75f ?  SprintMaxWalkSpeed : MaxWalkSpeed;
+}
+
+void AShooterSamCharacter::DoSprintEnd()
+{
+	bIsSprinting = false;
+	bShouldZoomIn = false;
+	bShouldZoomOut = true;
+	GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
 }
 
 void AShooterSamCharacter::HandleTakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)

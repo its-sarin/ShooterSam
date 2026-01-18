@@ -57,6 +57,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* ShootAction;
 
+	/** Zoom Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* ZoomAction;
+
+	/** Sprint Input Action */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* SprintAction;
+
 public:
 
 	/** Constructor */
@@ -76,6 +84,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 public:
+	virtual void Tick(float DeltaTime) override;
 
 	/** Handles move inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
@@ -97,6 +106,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void Shoot();
 
+	/** Handles zoom input */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoZoomStart();
+
+	/** Handles zoom input */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoZoomEnd();
+
+	/** Handles sprint input */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoSprintStart();
+
+	/** Handles sprint input */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void DoSprintEnd();
+
 public:
 
 	/** Returns CameraBoom subobject **/
@@ -112,8 +137,11 @@ public:
 	UPROPERTY(VisibleAnywhere, Category="Health")
 	float CurrentHealth;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
 	bool bIsAlive = true;
+
+	UPROPERTY(EditAnywhere)
+	bool bIsAICharacter = false;
 
 	/** Gun Actor to spawn */
 	UPROPERTY(EditAnywhere, Category = "Combat")
@@ -124,7 +152,31 @@ public:
 
 	void UpdateHUD();
 
+	UPROPERTY(EditAnywhere)
+	float ZoomedFOV = 60.0f;
+
+	UPROPERTY(EditAnywhere)
+	float DefaultFOV = 90.0f;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomInSensitivity = 0.5f;
+
+	UPROPERTY(EditAnywhere)
+	float DefaultSensitivity = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float SprintMaxWalkSpeed = 550.0f;
+
 private:
 	AGun* Gun;
+
+	bool bShouldZoomIn = false;
+	bool bShouldZoomOut = false;
+
+	bool bIsSprinting = false;
+
+	float MaxWalkSpeed;
+
+	FVector2D MovementVector;
 };
 
