@@ -61,7 +61,7 @@ void AShooterSamCharacter::BeginPlay()
 	CurrentHealth = MaxHealth;
 	UpdateHUD();
 
-	MaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 
 	OnTakeAnyDamage.AddDynamic(this, &AShooterSamCharacter::HandleTakeDamage);
 
@@ -90,13 +90,13 @@ void AShooterSamCharacter::Tick(float DeltaTime)
 	if (bShouldZoomIn)
 	{
 		// Smoothly interpolate camera FOV to zoomed FOV
-		float NewFOV = FMath::Lerp(FollowCamera->FieldOfView, ZoomedFOV, 0.1f);
+		float NewFOV = FMath::Lerp(FollowCamera->FieldOfView, ZoomedFOV, 10.f * DeltaTime);
 		FollowCamera->SetFieldOfView(NewFOV);
 	}
 	else if (bShouldZoomOut)
 	{
 		// Smoothly interpolate camera FOV back to default FOV
-		float NewFOV = FMath::Lerp(FollowCamera->FieldOfView, DefaultFOV, 0.1f);
+		float NewFOV = FMath::Lerp(FollowCamera->FieldOfView, DefaultFOV, 10.f * DeltaTime);
 		FollowCamera->SetFieldOfView(NewFOV);
 
 		if (FollowCamera->FieldOfView == DefaultFOV)
@@ -105,10 +105,9 @@ void AShooterSamCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	if (bIsSprinting && MovementVector.Y < 0.6f)
+	if (bIsSprinting && (MovementVector.Y < 0.6f || !GetMovementComponent()->IsMovingOnGround()))
 	{
-		GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
-		bIsSprinting = false;
+		StopSprint();
 	}
 }
 
@@ -132,12 +131,10 @@ void AShooterSamCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AShooterSamCharacter::Shoot);
 
 		// Zooming
-		EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &AShooterSamCharacter::DoZoomStart);
-		EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Completed, this, &AShooterSamCharacter::DoZoomEnd);
+		EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Triggered, this, &AShooterSamCharacter::Zoom);
 
 		// Sprinting
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AShooterSamCharacter::DoSprintStart);
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AShooterSamCharacter::DoSprintEnd);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &AShooterSamCharacter::Sprint);
 	}
 	else
 	{
@@ -164,6 +161,28 @@ void AShooterSamCharacter::Look(const FInputActionValue& Value)
 
 	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
+void AShooterSamCharacter::Zoom(const FInputActionValue& Value)
+{
+	if (bIsSprinting)
+	{
+		return;
+	}
+
+	bool bShouldZoom = Value.Get<bool>();
+
+	if (bShouldZoom)
+	{
+		bShouldZoomIn = true;
+		bShouldZoomOut = false;
+	}
+	else
+	{
+		bShouldZoomIn = false;
+		bShouldZoomOut = true;
+	}
+
 }
 
 void AShooterSamCharacter::DoMove(float Right, float Forward)
@@ -210,49 +229,29 @@ void AShooterSamCharacter::DoJumpEnd()
 
 void AShooterSamCharacter::Shoot()
 {
+	if (bIsSprinting)
+	{
+		return;
+	}
+
 	if (Gun)
 	{
 		Gun->PullTrigger();
 	}
 }
 
-void AShooterSamCharacter::DoZoomStart()
+void AShooterSamCharacter::Sprint(const FInputActionValue& Value)
 {
-	if (bIsSprinting)
+	bool bShouldSprint = Value.Get<bool>();
+
+	if (bShouldSprint && MovementVector.Y > 0.6f && GetMovementComponent()->IsMovingOnGround())
 	{
-		return;
+		StartSprint();
 	}
-	bShouldZoomIn = true;
-}
-
-void AShooterSamCharacter::DoZoomEnd()
-{
-	if (bIsSprinting)
+	else
 	{
-		return;
+		StopSprint();
 	}
-	bShouldZoomIn = false;
-	bShouldZoomOut = true;
-}
-
-void AShooterSamCharacter::DoSprintStart()
-{
-	if (MovementVector.Y < 0.6f)
-	{
-		return;
-	}
-
-	bIsSprinting = true;
-	bShouldZoomIn = true;
-	GetCharacterMovement()->MaxWalkSpeed = SprintMaxWalkSpeed;
-}
-
-void AShooterSamCharacter::DoSprintEnd()
-{
-	bIsSprinting = false;
-	bShouldZoomIn = false;
-	bShouldZoomOut = true;
-	GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
 }
 
 void AShooterSamCharacter::HandleTakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
@@ -304,4 +303,20 @@ void AShooterSamCharacter::Heal(float HealAmount)
 			GetActorLocation()
 		);
 	}
+}
+
+void AShooterSamCharacter::StartSprint()
+{
+	bIsSprinting = true;
+	bShouldZoomIn = true;
+	bShouldZoomOut = false;
+	GetCharacterMovement()->MaxWalkSpeed = SprintMaxWalkSpeed;
+}
+
+void AShooterSamCharacter::StopSprint()
+{
+	bIsSprinting = false;
+	bShouldZoomIn = false;
+	bShouldZoomOut = true;
+	GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
 }

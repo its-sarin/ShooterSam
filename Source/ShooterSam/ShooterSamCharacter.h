@@ -84,6 +84,12 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	/** Called for zoom input */
+	void Zoom(const FInputActionValue& Value);
+
+	/** Called for sprint input */
+	void Sprint(const FInputActionValue& Value);
+
 public:
 	virtual void Tick(float DeltaTime) override;
 
@@ -106,22 +112,6 @@ public:
 	/** Handles shoot input */
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void Shoot();
-
-	/** Handles zoom input */
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	virtual void DoZoomStart();
-
-	/** Handles zoom input */
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	virtual void DoZoomEnd();
-
-	/** Handles sprint input */
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	virtual void DoSprintStart();
-
-	/** Handles sprint input */
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	virtual void DoSprintEnd();
 
 public:
 
@@ -181,12 +171,12 @@ private:
 
 	bool bShouldZoomIn = false;
 	bool bShouldZoomOut = false;
-
 	bool bIsSprinting = false;
-	bool bIsSprintOnCooldown = false;
-
-	float MaxWalkSpeed;
+	float DefaultMaxWalkSpeed;
 
 	FVector2D MovementVector;
+
+	void StartSprint();
+	void StopSprint();
 
 };

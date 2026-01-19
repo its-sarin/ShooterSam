@@ -10,7 +10,7 @@
 AHealthPack::AHealthPack()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	// Create sphere component for collision
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
@@ -29,11 +29,11 @@ void AHealthPack::BeginPlay()
 }
 
 // Called every frame
-void AHealthPack::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
+//void AHealthPack::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//
+//}
 
 void AHealthPack::NotifyActorBeginOverlap(AActor* OtherActor)
 {
@@ -42,7 +42,7 @@ void AHealthPack::NotifyActorBeginOverlap(AActor* OtherActor)
 
 	if (AShooterSamCharacter* ShooterSam = Cast<AShooterSamCharacter>(OtherActor))
 	{
-		if (!ShooterSam->bIsAICharacter && ShooterSam->bIsAlive)
+		if (!ShooterSam->bIsAICharacter && ShooterSam->bIsAlive && ShooterSam->CurrentHealth < ShooterSam->MaxHealth)
 		{
 			ShooterSam->Heal(HealthAmount);
 			// Destroy health pack
